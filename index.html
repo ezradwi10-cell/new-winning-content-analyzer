@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2f5bff">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Winning Content Analyzer</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f2f5f7;--card:#fff;--ink:#0f2a3a;--mute:#5d7280;--line:#d9e2e8;--acc:#2f5bff;--win:#0e9f6e;--pot:#c98a00;--biasa:#5d7280;--kurang:#d64545;--track:#e6edf1;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1820;--card:#112530;--ink:#e8f0f4;--mute:#93a9b6;--line:#23404f;--acc:#7b97ff;--win:#34d399;--pot:#f0b429;--biasa:#93a9b6;--kurang:#ff7b7b;--track:#1d3846}}
+:root[data-theme="dark"]{--bg:#0b1820;--card:#112530;--ink:#e8f0f4;--mute:#93a9b6;--line:#23404f;--acc:#7b97ff;--win:#34d399;--pot:#f0b429;--biasa:#93a9b6;--kurang:#ff7b7b;--track:#1d3846}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.55 "DM Sans",system-ui,sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:22px 16px 48px}
+h1{font:800 clamp(26px,5vw,38px)/1.1 "Bricolage Grotesque",system-ui,sans-serif;margin:0 0 6px;letter-spacing:-.02em}
+h2{font:700 18px/1.2 "Bricolage Grotesque",system-ui,sans-serif;margin:0 0 12px}
+.sub{color:var(--mute);margin:0 0 22px;max-width:60ch}
+.grid{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+@media(min-width:840px){.grid{grid-template-columns:minmax(0,5fr) minmax(0,6fr)}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}
+.f{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.f .full{grid-column:1/-1}
+label{display:block;font-size:13px;font-weight:500;color:var(--mute);margin-bottom:4px}
+input,select{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);font:inherit}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+.hint{font-size:12px;color:var(--mute);margin-top:3px}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+button{font:700 15px "DM Sans",sans-serif;padding:11px 18px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+button.p{background:var(--acc);border-color:var(--acc);color:#fff}
+:root[data-theme="dark"] button.p{color:#0b1820}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) button.p{color:#0b1820}}
+.empty{color:var(--mute);padding:30px 6px;text-align:center}
+.verdict{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:14px}
+.ring{position:relative;width:132px;height:132px;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring b{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font:800 38px/1 "Bricolage Grotesque",sans-serif}
+.ring small{font:500 12px "DM Sans";color:var(--mute);margin-top:2px}
+.badge{display:inline-block;padding:5px 12px;border-radius:8px;font:800 20px "Bricolage Grotesque",sans-serif;color:#fff}
+:root[data-theme="dark"] .badge{color:#0b1820}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .badge{color:#0b1820}}
+.vt p{margin:8px 0 0;color:var(--mute);max-width:42ch}
+.m{padding:10px 0;border-top:1px solid var(--line)}
+.m .t{display:flex;justify-content:space-between;gap:10px;font-weight:500}
+.m .t span:last-child{color:var(--mute);font-weight:400;text-align:right}
+.bar{height:7px;background:var(--track);border-radius:4px;margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:4px}
+.m p{margin:5px 0 0;font-size:13px;color:var(--mute)}
+ul.ins{margin:0;padding-left:18px}
+ul.ins li{margin:6px 0}
+.hist{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line);cursor:pointer;background:none;border-left:0;border-right:0;border-bottom:0;border-radius:0;width:100%;text-align:left;font-weight:500}
+.hist em{font-style:normal;font-weight:700}
+.note{font-size:12px;color:var(--mute);margin-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Winning Content Analyzer</h1>
+<p class="sub">Masukkan angka dari insight konten yang sudah tayang. Aplikasi menghitung skor 0–100, memberi vonis winning atau bukan, lalu menunjukkan bagian mana yang kuat dan mana yang perlu diperbaiki.</p>
+
+<div class="grid">
+<section class="card">
+<h2>Data konten</h2>
+<div class="f" id="form">
+<div class="full"><label for="judul">Judul / catatan konten</label><input id="judul" placeholder="mis. Reel KROMIXA episode 3"></div>
+<div><label for="plat">Platform</label><select id="plat"><option value="tiktok">TikTok</option><option value="instagram">Instagram</option><option value="threads">Threads</option></select></div>
+<div><label for="usia">Usia posting (jam)</label><input id="usia" type="number" min="0" inputmode="decimal" value="48"></div>
+<div><label for="views">Views</label><input id="views" type="number" min="0" inputmode="numeric"></div>
+<div><label for="likes">Likes</label><input id="likes" type="number" min="0" inputmode="numeric"></div>
+<div><label for="comments">Komentar</label><input id="comments" type="number" min="0" inputmode="numeric"></div>
+<div><label for="shares">Share</label><input id="shares" type="number" min="0" inputmode="numeric"></div>
+<div><label for="saves">Save</label><input id="saves" type="number" min="0" inputmode="numeric"></div>
+<div><label for="fol">Followers</label><input id="fol" type="number" min="0" inputmode="numeric"></div>
+<div><label for="base">Rata-rata views 10 post terakhir</label><input id="base" type="number" min="0" inputmode="numeric"><div class="hint">Opsional, tapi sangat membantu akurasi.</div></div>
+<div><label for="ret">Retensi / watch time (%)</label><input id="ret" type="number" min="0" max="100" inputmode="decimal"><div class="hint">Opsional. Rata-rata durasi ditonton ÷ durasi video.</div></div>
+</div>
+<div class="row"><button class="p" id="go">Analisa konten</button><button id="demo" type="button">Isi contoh</button></div>
+<p class="note">Ambang batas memakai patokan umum tiap platform, bukan angka resmi. Sesuaikan dengan niche dan performa akunmu sendiri.</p>
+</section>
+
+<section>
+<div class="card" id="out"><div class="empty">Hasil analisa tampil di sini setelah kamu mengisi data dan menekan Analisa konten.</div></div>
+<div class="card" id="histbox" style="margin-top:16px;display:none"><h2>Riwayat analisa</h2><div id="hist"></div><div class="row"><button id="clr" type="button">Hapus riwayat</button></div></div>
+</section>
+</div>
+</div>
+
+<script>
+var $=function(i){return document.getElementById(i)};
+var ER_T={tiktok:8,instagram:6,threads:5};
+var KEY="wca_history_v1";
+function num(id){var v=parseFloat($(id).value);return isNaN(v)?null:v}
+function clamp(x){return Math.max(0,Math.min(100,x))}
+function pct(x){return (x*100).toFixed(2).replace(".",",")+"%"}
+function fmt(n){return Math.round(n).toLocaleString("id-ID")}
+function col(s){return s>=75?"var(--win)":s>=55?"var(--pot)":s>=35?"var(--biasa)":"var(--kurang)"}
+function verdict(s){
+  if(s>=75)return{k:"WINNING",c:"var(--win)",d:"Konten ini jelas melampaui rata-rata. Layak diskalakan."};
+  if(s>=55)return{k:"POTENSIAL",c:"var(--pot)",d:"Ada sinyal bagus, tapi belum konsisten. Perbaiki bagian terlemah lalu uji ulang."};
+  if(s>=35)return{k:"BIASA",c:"var(--biasa)",d:"Performa standar. Belum ada alasan kuat untuk menduplikasi formatnya."};
+  return{k:"BELUM WINNING",c:"var(--kurang)",d:"Sinyal audiens lemah. Pelajari hook dan topiknya sebelum membuat yang serupa."};
+}
+function analyze(){
+  var d={judul:$("judul").value.trim()||"Tanpa judul",plat:$("plat").value,usia:num("usia"),views:num("views"),likes:num("likes")||0,comments:num("comments")||0,shares:num("shares")||0,saves:num("saves")||0,fol:num("fol"),base:num("base"),ret:num("ret")};
+  if(!d.views||d.views<=0){$("out").innerHTML='<div class="empty">Isi jumlah views terlebih dahulu. Angka lainnya dihitung dari views.</div>';return null}
+  var inter=d.likes+d.comments+d.shares+d.saves, er=inter/d.views, ss=(d.shares+d.saves)/d.views, cr=d.comments/d.views;
+  var M=[];
+  if(d.base>0){var x=d.views/d.base;M.push({key:"base",label:"Views vs rata-rata akun",val:x.toFixed(1).replace(".",",")+"× rata-rata",s:x<=1?x*50:50+(x-1)*25,w:25,n:x>=2?"Jauh di atas kebiasaan akunmu.":x>=1?"Sedikit di atas normal.":"Di bawah normal akunmu."})}
+  if(d.fol>0){var r=d.views/d.fol;M.push({key:"reach",label:"Jangkauan vs followers",val:r.toFixed(2).replace(".",",")+"× followers",s:r*50,w:15,n:r>=1?"Menembus audiens di luar followers.":"Mayoritas hanya menjangkau followers."})}
+  M.push({key:"er",label:"Engagement rate",val:pct(er),s:er*100/ER_T[d.plat]*80,w:20,n:"Target "+ER_T[d.plat]+"% untuk "+$("plat").selectedOptions[0].text+"."});
+  M.push({key:"ss",label:"Share + save rate",val:pct(ss),s:ss*100/2*80,w:20,n:"Share dan save adalah sinyal terkuat bahwa konten bernilai. Target 2%."});
+  if(d.ret!=null&&d.plat!=="threads")M.push({key:"ret",label:"Retensi",val:d.ret.toFixed(0)+"%",s:d.ret/50*80,w:15,n:"Target 50% dari durasi video."});
+  M.push({key:"cm",label:"Comment rate",val:pct(cr),s:cr*100/.5*80,w:5,n:"Target 0,5%. Menunjukkan seberapa memancing diskusi."});
+  var tw=0,ts=0;M.forEach(function(m){m.s=clamp(m.s);tw+=m.w;ts+=m.s*m.w});
+  var score=Math.round(ts/tw);
+  return{d:d,M:M,score:score,er:er,ss:ss,v:verdict(score)};
+}
+var TIPS={
+ base:"Perhatikan topik dan format yang membuat views melonjak. Itu bahan utama untuk seri berikutnya.",
+ reach:"Followers saja belum cukup. Perkuat hook 3 detik pertama dan pakai topik yang dicari orang di luar audiens lama.",
+ er:"Tambahkan ajakan yang spesifik di akhir konten, misalnya pertanyaan yang mudah dijawab satu kata.",
+ ss:"Buat konten lebih berguna atau lebih layak dikirim ke teman: ringkasan, referensi visual, atau momen yang bikin orang bilang “ini kamu banget”.",
+ ret:"Retensi rendah biasanya karena pembukaan lambat. Potong 1–2 detik awal dan masukkan momen paling kuat lebih cepat.",
+ cm:"Akhiri dengan pertanyaan atau pilihan A/B agar orang punya alasan berkomentar."
+};
+function nextStep(a){
+  var s=a.score,p=a.d.plat;
+  if(s>=75)return["Buat 2–3 konten lanjutan dengan topik, hook, dan format yang sama dalam 7 hari.","Posting ulang potongan terbaik di platform lain ("+(p==="tiktok"?"Instagram Reels dan Threads":p==="instagram"?"TikTok dan Threads":"TikTok dan Instagram")+").","Pertimbangkan boost berbayar kecil karena sinyal organiknya sudah kuat."];
+  if(s>=55)return["Ambil metrik terlemah di bawah, perbaiki satu hal saja, lalu uji versi baru.","Jangan duplikasi penuh dulu. Tunggu satu konten lagi yang skornya serupa."];
+  return["Bandingkan hook 3 detik pertama dengan konten terbaikmu.","Uji topik atau judul yang berbeda sebelum mengganti gaya visual.","Jangan hapus konten ini. Catat sebagai data pembanding."];
+}
+function render(a){
+  var C=2*Math.PI*56,off=C*(1-a.score/100),c=a.v.c;
+  var sorted=a.M.slice().sort(function(x,y){return x.s-y.s}),weak=sorted[0],strong=sorted[sorted.length-1];
+  var ins=[];
+  ins.push("Terkuat: <b>"+strong.label+"</b> ("+strong.val+"). "+strong.n);
+  if(weak!==strong)ins.push("Terlemah: <b>"+weak.label+"</b> ("+weak.val+"). "+TIPS[weak.key]);
+  if(a.d.usia!=null&&a.d.usia<24)ins.push("Postingan baru "+Math.round(a.d.usia)+" jam. Vonis masih bisa berubah, analisa ulang setelah 24–48 jam. Kecepatan saat ini sekitar "+fmt(a.d.views/Math.max(a.d.usia,1))+" views/jam.");
+  if(!(a.d.base>0))ins.push("Isi rata-rata views post terakhir agar skor membandingkan dengan performa akunmu sendiri, bukan hanya patokan umum.");
+  var h='<div class="verdict"><div class="ring"><svg viewBox="0 0 132 132" aria-hidden="true"><circle cx="66" cy="66" r="56" fill="none" stroke="var(--track)" stroke-width="12"/><circle cx="66" cy="66" r="56" fill="none" stroke="'+c+'" stroke-width="12" stroke-linecap="round" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'"/></svg><b>'+a.score+'<small>dari 100</small></b></div><div class="vt"><span class="badge" style="background:'+c+'">'+a.v.k+'</span><p>'+a.v.d+'</p></div></div>';
+  h+='<h2 style="margin-top:6px">Rincian metrik</h2>';
+  a.M.forEach(function(m){h+='<div class="m"><div class="t"><span>'+m.label+'</span><span>'+m.val+'</span></div><div class="bar" role="img" aria-label="Skor '+Math.round(m.s)+' dari 100"><i style="width:'+Math.round(m.s)+'%;background:'+col(m.s)+'"></i></div><p>'+m.n+'</p></div>'});
+  h+='<h2 style="margin-top:18px">Temuan</h2><ul class="ins">'+ins.map(function(t){return"<li>"+t+"</li>"}).join("")+'</ul>';
+  h+='<h2 style="margin-top:18px">Langkah berikutnya</h2><ul class="ins">'+nextStep(a).map(function(t){return"<li>"+t+"</li>"}).join("")+'</ul>';
+  $("out").innerHTML=h;
+}
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){return[]}}
+function save(a){var l=load();l.unshift({d:a.d,score:a.score,t:Date.now()});l=l.slice(0,15);try{localStorage.setItem(KEY,JSON.stringify(l))}catch(e){}drawHist(l)}
+function esc(s){return s.replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function drawHist(l){
+  l=l||load();$("histbox").style.display=l.length?"block":"none";
+  $("hist").innerHTML=l.map(function(x,i){var v=verdict(x.score);return'<button class="hist" data-i="'+i+'"><span>'+esc(x.d.judul)+'</span><em style="color:'+v.c+'">'+x.score+" · "+v.k.toLowerCase()+"</em></button>"}).join("");
+}
+var IDS=["judul","plat","usia","views","likes","comments","shares","saves","fol","base","ret"];
+var MAP={judul:"judul",plat:"plat",usia:"usia",views:"views",likes:"likes",comments:"comments",shares:"shares",saves:"saves",fol:"fol",base:"base",ret:"ret"};
+function fill(d){IDS.forEach(function(k){$(k).value=d[MAP[k]]==null?"":d[MAP[k]]})}
+$("go").onclick=function(){var a=analyze();if(a){render(a);save(a)}};
+$("demo").onclick=function(){fill({judul:"Contoh: Reel episode 3",plat:"instagram",usia:72,views:48200,likes:3900,comments:210,shares:640,saves:520,fol:12000,base:9000,ret:58})};
+$("hist").onclick=function(e){var b=e.target.closest("button");if(!b)return;var x=load()[+b.dataset.i];if(x){fill(x.d);var a=analyze();if(a)render(a)}};
+$("clr").onclick=function(){try{localStorage.removeItem(KEY)}catch(e){}drawHist([])};
+drawHist();
+</script>
+<script>
+if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("./sw.js").catch(function(){})})}
+</script>
+</body>
+</html>
