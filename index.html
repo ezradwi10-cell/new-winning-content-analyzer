@@ -77,7 +77,8 @@ ul.ins li{margin:6px 0}
 <div><label for="saves">Save</label><input id="saves" type="number" min="0" inputmode="numeric"></div>
 <div><label for="fol">Followers</label><input id="fol" type="number" min="0" inputmode="numeric"></div>
 <div><label for="base">Rata-rata views 10 post terakhir</label><input id="base" type="number" min="0" inputmode="numeric"><div class="hint">Opsional, tapi sangat membantu akurasi.</div></div>
-<div><label for="ret">Retensi / watch time (%)</label><input id="ret" type="number" min="0" max="100" inputmode="decimal"><div class="hint">Opsional. Rata-rata durasi ditonton ÷ durasi video.</div></div>
+<div><label for="wt">Rata-rata watch time (detik)</label><input id="wt" type="number" min="0" step="any" inputmode="decimal"><div class="hint">Opsional. Ada di insight video.</div></div>
+<div><label for="dur">Durasi video (detik)</label><input id="dur" type="number" min="0" step="any" inputmode="decimal"><div class="hint">Dipakai untuk menghitung retensi.</div></div>
 </div>
 <div class="row"><button class="p" id="go">Analisa konten</button><button id="demo" type="button">Isi contoh</button></div>
 <p class="note">Ambang batas memakai patokan umum tiap platform, bukan angka resmi. Sesuaikan dengan niche dan performa akunmu sendiri.</p>
@@ -106,7 +107,7 @@ function verdict(s){
   return{k:"BELUM WINNING",c:"var(--kurang)",d:"Sinyal audiens lemah. Pelajari hook dan topiknya sebelum membuat yang serupa."};
 }
 function analyze(){
-  var d={judul:$("judul").value.trim()||"Tanpa judul",plat:$("plat").value,usia:num("usia"),views:num("views"),likes:num("likes")||0,comments:num("comments")||0,shares:num("shares")||0,saves:num("saves")||0,fol:num("fol"),base:num("base"),ret:num("ret")};
+  var d={judul:$("judul").value.trim()||"Tanpa judul",plat:$("plat").value,usia:num("usia"),views:num("views"),likes:num("likes")||0,comments:num("comments")||0,shares:num("shares")||0,saves:num("saves")||0,fol:num("fol"),base:num("base"),wt:num("wt"),dur:num("dur")};
   if(!d.views||d.views<=0){$("out").innerHTML='<div class="empty">Isi jumlah views terlebih dahulu. Angka lainnya dihitung dari views.</div>';return null}
   var inter=d.likes+d.comments+d.shares+d.saves, er=inter/d.views, ss=(d.shares+d.saves)/d.views, cr=d.comments/d.views;
   var M=[];
@@ -114,7 +115,8 @@ function analyze(){
   if(d.fol>0){var r=d.views/d.fol;M.push({key:"reach",label:"Jangkauan vs followers",val:r.toFixed(2).replace(".",",")+"× followers",s:r*50,w:15,n:r>=1?"Menembus audiens di luar followers.":"Mayoritas hanya menjangkau followers."})}
   M.push({key:"er",label:"Engagement rate",val:pct(er),s:er*100/ER_T[d.plat]*80,w:20,n:"Target "+ER_T[d.plat]+"% untuk "+$("plat").selectedOptions[0].text+"."});
   M.push({key:"ss",label:"Share + save rate",val:pct(ss),s:ss*100/2*80,w:20,n:"Share dan save adalah sinyal terkuat bahwa konten bernilai. Target 2%."});
-  if(d.ret!=null&&d.plat!=="threads")M.push({key:"ret",label:"Retensi",val:d.ret.toFixed(0)+"%",s:d.ret/50*80,w:15,n:"Target 50% dari durasi video."});
+  var ret=(d.wt!=null&&d.dur>0)?Math.min(100,d.wt/d.dur*100):null;
+  if(ret!=null&&d.plat!=="threads")M.push({key:"ret",label:"Retensi",val:d.wt.toFixed(1).replace(".",",")+" dtk dari "+d.dur.toFixed(0)+" dtk ("+ret.toFixed(0)+"%)",s:ret/50*80,w:15,n:"Target sekitar 50% dari durasi video."});
   M.push({key:"cm",label:"Comment rate",val:pct(cr),s:cr*100/.5*80,w:5,n:"Target 0,5%. Menunjukkan seberapa memancing diskusi."});
   var tw=0,ts=0;M.forEach(function(m){m.s=clamp(m.s);tw+=m.w;ts+=m.s*m.w});
   var score=Math.round(ts/tw);
@@ -141,6 +143,7 @@ function render(a){
   ins.push("Terkuat: <b>"+strong.label+"</b> ("+strong.val+"). "+strong.n);
   if(weak!==strong)ins.push("Terlemah: <b>"+weak.label+"</b> ("+weak.val+"). "+TIPS[weak.key]);
   if(a.d.usia!=null&&a.d.usia<24)ins.push("Postingan baru "+Math.round(a.d.usia)+" jam. Vonis masih bisa berubah, analisa ulang setelah 24–48 jam. Kecepatan saat ini sekitar "+fmt(a.d.views/Math.max(a.d.usia,1))+" views/jam.");
+  if(a.d.wt!=null&&!(a.d.dur>0)&&a.d.plat!=="threads")ins.push("Isi durasi video agar watch time bisa dihitung menjadi retensi.");
   if(!(a.d.base>0))ins.push("Isi rata-rata views post terakhir agar skor membandingkan dengan performa akunmu sendiri, bukan hanya patokan umum.");
   var h='<div class="verdict"><div class="ring"><svg viewBox="0 0 132 132" aria-hidden="true"><circle cx="66" cy="66" r="56" fill="none" stroke="var(--track)" stroke-width="12"/><circle cx="66" cy="66" r="56" fill="none" stroke="'+c+'" stroke-width="12" stroke-linecap="round" stroke-dasharray="'+C.toFixed(1)+'" stroke-dashoffset="'+off.toFixed(1)+'"/></svg><b>'+a.score+'<small>dari 100</small></b></div><div class="vt"><span class="badge" style="background:'+c+'">'+a.v.k+'</span><p>'+a.v.d+'</p></div></div>';
   h+='<h2 style="margin-top:6px">Rincian metrik</h2>';
@@ -156,11 +159,11 @@ function drawHist(l){
   l=l||load();$("histbox").style.display=l.length?"block":"none";
   $("hist").innerHTML=l.map(function(x,i){var v=verdict(x.score);return'<button class="hist" data-i="'+i+'"><span>'+esc(x.d.judul)+'</span><em style="color:'+v.c+'">'+x.score+" · "+v.k.toLowerCase()+"</em></button>"}).join("");
 }
-var IDS=["judul","plat","usia","views","likes","comments","shares","saves","fol","base","ret"];
-var MAP={judul:"judul",plat:"plat",usia:"usia",views:"views",likes:"likes",comments:"comments",shares:"shares",saves:"saves",fol:"fol",base:"base",ret:"ret"};
+var IDS=["judul","plat","usia","views","likes","comments","shares","saves","fol","base","wt","dur"];
+var MAP={judul:"judul",plat:"plat",usia:"usia",views:"views",likes:"likes",comments:"comments",shares:"shares",saves:"saves",fol:"fol",base:"base",wt:"wt",dur:"dur"};
 function fill(d){IDS.forEach(function(k){$(k).value=d[MAP[k]]==null?"":d[MAP[k]]})}
 $("go").onclick=function(){var a=analyze();if(a){render(a);save(a)}};
-$("demo").onclick=function(){fill({judul:"Contoh: Reel episode 3",plat:"instagram",usia:72,views:48200,likes:3900,comments:210,shares:640,saves:520,fol:12000,base:9000,ret:58})};
+$("demo").onclick=function(){fill({judul:"Contoh: Reel episode 3",plat:"instagram",usia:72,views:48200,likes:3900,comments:210,shares:640,saves:520,fol:12000,base:9000,wt:17.5,dur:30})};
 $("hist").onclick=function(e){var b=e.target.closest("button");if(!b)return;var x=load()[+b.dataset.i];if(x){fill(x.d);var a=analyze();if(a)render(a)}};
 $("clr").onclick=function(){try{localStorage.removeItem(KEY)}catch(e){}drawHist([])};
 drawHist();
