@@ -56,6 +56,12 @@ ul.ins li{margin:6px 0}
 .hist{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line);cursor:pointer;background:none;border-left:0;border-right:0;border-bottom:0;border-radius:0;width:100%;text-align:left;font-weight:500}
 .hist em{font-style:normal;font-weight:700}
 .note{font-size:12px;color:var(--mute);margin-top:14px}
+[hidden]{display:none!important}
+.tabs{display:flex;gap:4px;margin-bottom:18px;border-bottom:1px solid var(--line)}
+.tabs button{border:0;border-bottom:3px solid transparent;border-radius:8px 8px 0 0;background:none;padding:10px 14px;color:var(--mute)}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--acc)}
+.big{font:800 46px/1 "Bricolage Grotesque",sans-serif}
+.cmp{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 4px;font-size:13px;color:var(--mute)}
 </style>
 </head>
 <body>
@@ -63,7 +69,8 @@ ul.ins li{margin:6px 0}
 <h1>Winning Content Analyzer</h1>
 <p class="sub">Masukkan angka dari insight konten yang sudah tayang. Aplikasi menghitung skor 0–100, memberi vonis winning atau bukan, lalu menunjukkan bagian mana yang kuat dan mana yang perlu diperbaiki.</p>
 
-<div class="grid">
+<div class="tabs" role="tablist"><button id="t1" role="tab" aria-selected="true" type="button">Analisa konten</button><button id="t2" role="tab" aria-selected="false" type="button">Engagement akun</button></div>
+<div class="grid" id="v1">
 <section class="card">
 <h2>Data konten</h2>
 <div class="f" id="form">
@@ -88,6 +95,25 @@ ul.ins li{margin:6px 0}
 <div class="card" id="out"><div class="empty">Hasil analisa tampil di sini setelah kamu mengisi data dan menekan Analisa konten.</div></div>
 <div class="card" id="histbox" style="margin-top:16px;display:none"><h2>Riwayat analisa</h2><div id="hist"></div><div class="row"><button id="clr" type="button">Hapus riwayat</button></div></div>
 </section>
+</div>
+<div class="grid" id="v2" hidden>
+<section class="card">
+<h2>Data akun</h2>
+<div class="f">
+<div class="full"><label for="an">Nama akun</label><input id="an" placeholder="mis. @namaakun"></div>
+<div><label for="ap">Platform</label><select id="ap"><option value="tiktok">TikTok</option><option value="instagram">Instagram</option><option value="threads">Threads</option></select></div>
+<div><label for="af">Followers</label><input id="af" type="number" min="0" inputmode="numeric"></div>
+<div><label for="anp">Jumlah post dianalisa</label><input id="anp" type="number" min="1" inputmode="numeric"><div class="hint">Disarankan 10–20 post terakhir.</div></div>
+<div><label for="aav">Total views semua post</label><input id="aav" type="number" min="0" inputmode="numeric"><div class="hint">Opsional.</div></div>
+<div><label for="al">Total likes</label><input id="al" type="number" min="0" inputmode="numeric"></div>
+<div><label for="ac">Total komentar</label><input id="ac" type="number" min="0" inputmode="numeric"></div>
+<div><label for="as">Total share</label><input id="as" type="number" min="0" inputmode="numeric"></div>
+<div><label for="asv">Total save</label><input id="asv" type="number" min="0" inputmode="numeric"></div>
+</div>
+<div class="row"><button class="p" id="ago">Hitung engagement</button><button id="ademo" type="button">Isi contoh</button></div>
+<p class="note">Jumlahkan angka dari semua post yang dianalisa. Kategori Rendah sampai Sangat bagus memakai patokan umum, bukan angka resmi platform.</p>
+</section>
+<section><div class="card" id="aout"><div class="empty">Hasil engagement rate akun tampil di sini.</div></div></section>
 </div>
 </div>
 
@@ -166,6 +192,38 @@ $("go").onclick=function(){var a=analyze();if(a){render(a);save(a)}};
 $("demo").onclick=function(){fill({judul:"Contoh: Reel episode 3",plat:"instagram",usia:72,views:48200,likes:3900,comments:210,shares:640,saves:520,fol:12000,base:9000,wt:17.5,dur:30})};
 $("hist").onclick=function(e){var b=e.target.closest("button");if(!b)return;var x=load()[+b.dataset.i];if(x){fill(x.d);var a=analyze();if(a)render(a)}};
 $("clr").onclick=function(){try{localStorage.removeItem(KEY)}catch(e){}drawHist([])};
+var AB={tiktok:{f:[2,5,10],v:[3,6,10]},instagram:{f:[1,3,6],v:[2,4,7]},threads:{f:[1,3,6],v:[2,4,7]}};
+var LV=["Rendah","Rata-rata","Bagus","Sangat bagus"],LC=["var(--kurang)","var(--biasa)","var(--pot)","var(--win)"];
+function lvl(x,t){return x<t[0]?0:x<t[1]?1:x<t[2]?2:3}
+function p2(x){return x.toFixed(2).replace(".",",")+"%"}
+function acct(){
+  var p=$("ap").value,f=num("af"),n=num("anp"),L=num("al")||0,C=num("ac")||0,S=num("as")||0,V=num("asv")||0,W=num("aav"),tot=L+C+S+V,pn=$("ap").selectedOptions[0].text;
+  if(!(f>0)||!(n>0)){$("aout").innerHTML='<div class="empty">Isi followers dan jumlah post yang dianalisa terlebih dahulu.</div>';return}
+  var per=tot/n,erf=per/f*100,erv=W>0?tot/W*100:null,T=AB[p],li=lvl(erf,T.f);
+  var bw=function(x,t){return Math.round(Math.max(0,Math.min(100,x/(t[2]*1.5)*100)))};
+  var h='<div style="margin-bottom:6px"><span class="big" style="color:'+LC[li]+'">'+p2(erf)+'</span></div><span class="badge" style="background:'+LC[li]+'">'+LV[li]+'</span>';
+  h+='<p class="sub" style="margin:10px 0 14px">Engagement rate rata-rata per post terhadap followers'+($("an").value.trim()?" untuk "+esc($("an").value.trim()):"")+" di "+pn+".</p>";
+  h+='<div class="m"><div class="t"><span>ER terhadap followers</span><span>'+p2(erf)+'</span></div><div class="bar"><i style="width:'+bw(erf,T.f)+'%;background:'+LC[li]+'"></i></div><p>Rata-rata interaksi per post ÷ followers. Bagus mulai '+T.f[2]+'%.</p></div>';
+  if(erv!=null){var lv=lvl(erv,T.v);h+='<div class="m"><div class="t"><span>ER terhadap views</span><span>'+p2(erv)+' · '+LV[lv].toLowerCase()+'</span></div><div class="bar"><i style="width:'+bw(erv,T.v)+'%;background:'+LC[lv]+'"></i></div><p>Total interaksi ÷ total views. Bagus mulai '+T.v[2]+'%.</p></div>'}
+  h+='<div class="m"><div class="t"><span>Rata-rata interaksi per post</span><span>'+fmt(per)+'</span></div></div>';
+  if(W>0)h+='<div class="m"><div class="t"><span>Rata-rata views per post</span><span>'+fmt(W/n)+' ('+(W/n/f).toFixed(2).replace(".",",")+"× followers)"+'</span></div></div>';
+  if(tot>0){var q=function(x){return Math.round(x/tot*100)+"%"};h+='<div class="cmp"><span>Like '+q(L)+'</span><span>Komentar '+q(C)+'</span><span>Share '+q(S)+'</span><span>Save '+q(V)+'</span></div>'}
+  var ins=[];
+  ins.push("ER "+p2(erf)+" masuk kategori <b>"+LV[li].toLowerCase()+"</b> untuk "+pn+". "+(li>=2?"Audiensmu responsif.":li===1?"Wajar, tapi masih ada ruang naik.":"Interaksi terhadap followers masih kecil."));
+  if(erv!=null){var lv2=lvl(erv,T.v);
+    if(lv2>=2&&li<=1)ins.push("Orang yang melihat kontenmu aktif berinteraksi, tapi jangkauan ke followers terbatas. Fokus ke hook dan jadwal posting agar lebih banyak followers melihatnya.");
+    if(lv2<=1&&li>=2)ins.push("Interaksi bagus dibanding jumlah followers, tapi per views masih rendah. Banyak penonton menonton tanpa berinteraksi, jadi perkuat ajakan share dan save.")}
+  if(tot>0&&(S+V)/tot<0.1)ins.push("Share dan save baru sedikit dari total interaksi. Buat konten yang layak disimpan atau dikirim ke teman.");
+  if(n<5)ins.push("Sampel baru "+n+" post. Pakai minimal 10 post agar angkanya stabil.");
+  if(f<1000)ins.push("Followers masih di bawah 1.000, jadi ER bisa naik turun besar dari satu post.");
+  h+='<h2 style="margin-top:18px">Temuan</h2><ul class="ins">'+ins.map(function(t){return"<li>"+t+"</li>"}).join("")+"</ul>";
+  $("aout").innerHTML=h;
+}
+function tab(w){$("v1").hidden=w!==1;$("v2").hidden=w!==2;$("t1").setAttribute("aria-selected",w===1);$("t2").setAttribute("aria-selected",w===2)}
+$("t1").onclick=function(){tab(1)};$("t2").onclick=function(){tab(2)};
+$("ago").onclick=acct;
+$("ademo").onclick=function(){var d={an:"@contoh",ap:"instagram",af:12000,anp:10,aav:180000,al:9000,ac:600,as:1500,asv:1200};for(var k in d)$(k).value=d[k]};
+
 drawHist();
 </script>
 <script>
